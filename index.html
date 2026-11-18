@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python National Bank - ATM Simulator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+
+        .atm-container {
+            background: linear-gradient(145deg, #262626, #1a1a1a);
+            width: 440px;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 3px solid #333;
+        }
+
+        .atm-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .atm-header h2 {
+            color: #38bdf8;
+            font-size: 24px;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+
+        .atm-header p {
+            font-size: 13px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .atm-screen {
+            background: linear-gradient(180deg, #090d16, #05080e);
+            border: 3px solid #1e293b;
+            border-radius: 14px;
+            height: 380px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.8);
+        }
+
+        .view {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .view.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .view h3 {
+            margin-bottom: 15px;
+            font-size: 20px;
+            color: #f8fafc;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .view p.subtitle {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            color: #fff;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 18px;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+        }
+
+        .action-btn, .menu-btn {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        }
+
+        .action-btn:hover, .menu-btn:hover {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(2, 132, 199, 0.4);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .menu-btn {
+            background: linear-gradient(135deg, #334155, #1e293b);
+            box-shadow: none;
+            border: 1px solid #475569;
+        }
+
+        .menu-btn:hover {
+            background: linear-gradient(135deg, #475569, #334155);
+            border-color: #64748b;
+        }
+
+        .balance-box {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid #334155;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .balance-box span {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+        }
+
+        .balance-box h2 {
+            color: #4ade80;
+            font-size: 28px;
+            margin-top: 4px;
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.2);
+        }
+
+        .quick-cash {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .quick-cash button {
+            flex: 1;
+            background: #1e293b;
+            color: #38bdf8;
+            border: 1px solid #334155;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .quick-cash button:hover {
+            background: #334155;
+            color: #fff;
+            border-color: #38bdf8;
+        }
+
+        .back-btn {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #1e293b;
+            color: #fff;
+            border-color: #475569;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+        }
+
+        .error-msg, .feedback-msg {
+            color: #f87171;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 8px;
+            min-height: 18px;
+        }
+
+        .feedback-msg.success {
+            color: #4ade80;
+        }
+
+        #history-list {
+            list-style: none;
+            padding: 0;
+            font-size: 13px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+
+        #history-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        #history-list::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+
+        #history-list li {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            border-radius: 8px;
+            border-left: 3px solid #38bdf8;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .atm-footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .receipt-slot {
+            background: #121620;
+            color: #475569;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            border-top: 2px solid #1e293b;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="atm-container">
+        <!-- ATM Header -->
+        <div class="atm-header">
+            <h2>🐍 Python National Bank</h2>
+            <p>Secure Terminal v2.0</p>
+        </div>
+
+        <!-- ATM Screen -->
+        <div class="atm-screen">
+            <!-- Login View -->
+            <div id="login-screen" class="view active">
+                <h3>Insert Card / Enter PIN</h3>
+                <p class="subtitle">Default security PIN is: <strong>1234</strong></p>
+                <input type="password" id="pin-input" maxlength="4" placeholder="••••">
+                <button onclick="login()" class="action-btn">Authorize Entry</button>
+                <p id="login-error" class="error-msg"></p>
+            </div>
+
+            <!-- Dashboard View -->
+            <div id="dashboard-screen" class="view">
+                <div class="balance-box">
+                    <span>Available Balance</span>
+                    <h2 id="balance-display">R1,000.00</h2>
+                </div>
+                <div class="menu-grid">
+                    <button onclick="showScreen('deposit-screen')" class="menu-btn">Deposit</button>
+                    <button onclick="showScreen('withdraw-screen')" class="menu-btn">Withdraw</button>
+                    <button onclick="showScreen('transfer-screen')" class="menu-btn">Transfer</button>
+                    <button onclick="viewHistory()" class="menu-btn">Statement</button>
+                </div>
+                <button onclick="logout()" class="logout-btn">Eject Card / Logout</button>
+            </div>
+
+            <!-- Deposit View -->
+            <div id="deposit-screen" class="view">
+                <h3>Deposit Funds</h3>
+                <input type="number" id="deposit-amount" placeholder="Enter amount (R)">
+                <button onclick="deposit()" class="action-btn">Confirm Deposit</button>
+                <button onclick="showScreen('dashboard-screen')" class="back-btn">Back to Menu</button>
+                <p id="deposit-msg" class="feedback-msg"></p>
+            </div>
+
+            <!-- Withdraw View -->
+            <div id="withdraw-screen" class="view">
+                <h3>Withdraw Funds</h3>
+                <div class="quick-cash">
+                    <button onclick="quickWithdraw(100)">R100</button>
+                    <button onclick="quickWithdraw(500)">R500</button>
+                    <button onclick="quickWithdraw(1000)">R1000</button>
+                </div>
+                <input type="number" id="withdraw-amount" placeholder="Custom amount (R)">
+                <button onclick="withdraw()" class="action-btn">Confirm Withdrawal</button>
+                <button onclick="showScreen('dashboard-screen')" class="back-btn">Back to Menu</button>
+                <p id="withdraw-msg" class="feedback-msg"></p>
+            </div>
+
+            <!-- Transfer View -->
+            <div id="transfer-screen" class="view">
+                <h3>Transfer Funds</h3>
+                <input type="text" id="transfer-account" placeholder="Recipient Account No.">
+                <input type="number" id="transfer-amount" placeholder="Amount (R)">
+                <button onclick="transfer()" class="action-btn">Send Transfer</button>
+                <button onclick="showScreen('dashboard-screen')" class="back-btn">Back to Menu</button>
+                <p id="transfer-msg" class="feedback-msg"></p>
+            </div>
+
+            <!-- History View -->
+            <div id="history-screen" class="view">
+                <h3>Transaction History</h3>
+                <ul id="history-list"></ul>
+                <button onclick="showScreen('dashboard-screen')" class="back-btn">Back to Menu</button>
+            </div>
+        </div>
+
+        <!-- Receipt Tray Footer -->
+        <div class="atm-footer">
+            <div class="receipt-slot">Receipt Output Slot</div>
+        </div>
+    </div>
+
+    <script>
+        let balance = 1000.00;
+        const correctPin = "1234";
+        let transactions = [];
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.view').forEach(view => {
+                view.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+            document.querySelectorAll('.feedback-msg, .error-msg').forEach(msg => msg.textContent = "");
+        }
+
+        function login() {
+            const pinInput = document.getElementById('pin-input').value;
+            const errorMsg = document.getElementById('login-error');
+
+            if (pinInput === correctPin) {
+                document.getElementById('pin-input').value = "";
+                updateBalanceDisplay();
+                showScreen('dashboard-screen');
+            } else {
+                errorMsg.textContent = "Incorrect PIN. Try '1234'.";
+            }
+        }
+
+        function logout() {
+            showScreen('login-screen');
+        }
+
+        function updateBalanceDisplay() {
+            document.getElementById('balance-display').textContent = `R${balance.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function deposit() {
+            const amountInput = document.getElementById('deposit-amount');
+            const msg = document.getElementById('deposit-msg');
+            const amount = parseFloat(amountInput.value);
+
+            if (isNaN(amount) || amount <= 0) {
+                msg.textContent = "Please enter a valid amount.";
+                msg.className = "feedback-msg error";
+                return;
+            }
+
+            balance += amount;
+            transactions.unshift(`<span>Deposit</span> <span>+R${amount.toFixed(2)}</span>`);
+            updateBalanceDisplay();
+
+            msg.textContent = `Successfully deposited R${amount.toFixed(2)}`;
+            msg.className = "feedback-msg success";
+            amountInput.value = "";
+        }
+
+        function quickWithdraw(amount) {
+            document.getElementById('withdraw-amount').value = amount;
+        }
+
+        function withdraw() {
+            const amountInput = document.getElementById('withdraw-amount');
+            const msg = document.getElementById('withdraw-msg');
+            const amount = parseFloat(amountInput.value);
+
+            if (isNaN(amount) || amount <= 0) {
+                msg.textContent = "Please enter a valid amount.";
+                msg.className = "feedback-msg error";
+                return;
+            }
+
+            if (amount > balance) {
+                msg.textContent = "Insufficient funds!";
+                msg.className = "feedback-msg error";
+                return;
+            }
+
+            balance -= amount;
+            transactions.unshift(`<span>Withdrawal</span> <span>-R${amount.toFixed(2)}</span>`);
+            updateBalanceDisplay();
+
+            msg.textContent = `Successfully withdrew R${amount.toFixed(2)}`;
+            msg.className = "feedback-msg success";
+            amountInput.value = "";
+        }
+
+        function transfer() {
+            const accountInput = document.getElementById('transfer-account');
+            const amountInput = document.getElementById('transfer-amount');
+            const msg = document.getElementById('transfer-msg');
+            const accountNumber = accountInput.value.trim();
+            const amount = parseFloat(amountInput.value);
+
+            if (accountNumber === "") {
+                msg.textContent = "Please enter an account number.";
+                msg.className = "feedback-msg error";
+                return;
+            }
+
+            if (isNaN(amount) || amount <= 0) {
+                msg.textContent = "Please enter a valid amount.";
+                msg.className = "feedback-msg error";
+                return;
+            }
+
+            if (amount > balance) {
+                msg.textContent = "Insufficient funds for transfer!";
+                msg.className = "feedback-msg error";
+                return;
+            }
+
+            balance -= amount;
+            transactions.unshift(`<span>Transfer (${accountNumber})</span> <span>-R${amount.toFixed(2)}</span>`);
+            updateBalanceDisplay();
+
+            msg.textContent = `Transferred R${amount.toFixed(2)} successfully!`;
+            msg.className = "feedback-msg success";
+            accountInput.value = "";
+            amountInput.value = "";
+        }
+
+        function viewHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = "";
+
+            if (transactions.length === 0) {
+                list.innerHTML = "<li style='justify-content: center; color: #94a3b8;'>No recent transactions.</li>";
+            } else {
+                transactions.forEach(tx => {
+                    const li = document.createElement('li');
+                    li.innerHTML = tx;
+                    list.appendChild(li);
+                });
+            }
+
+            showScreen('history-screen');
+        }
+    </script>
+</body>
+</html>
